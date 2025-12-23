@@ -6,7 +6,6 @@ import androidx.paging.PagingData
 import com.aritradas.movieapp.data.remote.ApiServices
 import com.aritradas.movieapp.domain.model.Movie
 import com.aritradas.movieapp.domain.model.MovieDetail
-import com.aritradas.movieapp.domain.model.Genre
 import com.aritradas.movieapp.domain.repository.MovieRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -48,21 +47,8 @@ class MovieRepositoryImpl(
     }
 
     override suspend fun getMovieDetails(movieId: Int): MovieDetail {
-        val cached = _moviesCache.value.firstOrNull { it.id == movieId }
-
         return withContext(ioDispatcher) {
-            val detail = apiServices.getMovieDetails(movieId)
-            val posterUrl = detail.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" } ?: cached?.posterUrl
-            MovieDetail(
-                id = detail.id,
-                title = detail.title,
-                overview = detail.overview,
-                posterUrl = posterUrl,
-                rating = detail.voteAverage,
-                releaseDate = detail.releaseDate,
-                runtime = detail.runtime,
-                genres = detail.genres.map { Genre(id = it.id, name = it.name) }
-            )
+            apiServices.getMovieDetails(movieId)
         }
     }
 

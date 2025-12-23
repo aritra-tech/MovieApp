@@ -15,16 +15,7 @@ class MoviePagingSource(
         return try {
             val page = params.key ?: 1
             val response = apiServices.discoverMovies(page = page, query = query)
-            val movies = response.results.map { dto ->
-                Movie(
-                    id = dto.id,
-                    title = dto.title,
-                    overview = dto.overview,
-                    posterUrl = dto.posterPath?.let { "https://image.tmdb.org/t/p/w500$it" },
-                    rating = dto.voteAverage,
-                    releaseYear = dto.releaseDate?.take(4)
-                )
-            }
+            val movies = response.results
 
             onPageLoaded(movies)
 

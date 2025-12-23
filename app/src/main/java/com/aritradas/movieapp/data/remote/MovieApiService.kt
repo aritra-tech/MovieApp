@@ -1,5 +1,7 @@
 package com.aritradas.movieapp.data.remote
 
+import com.aritradas.movieapp.domain.model.DiscoverMoviesResponse
+import com.aritradas.movieapp.domain.model.MovieDetail
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -31,7 +33,7 @@ class ApiServices(
         }.body()
     }
 
-    suspend fun getMovieDetails(movieId: Int): MovieDetailResponse {
+    suspend fun getMovieDetails(movieId: Int): MovieDetail {
         val apiKey = apiKeyProvider()
         return client.get("https://api.themoviedb.org/3/movie/$movieId") {
             parameter("api_key", apiKey)
