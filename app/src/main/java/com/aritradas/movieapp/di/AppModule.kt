@@ -4,7 +4,7 @@ import com.aritradas.movieapp.BuildConfig
 import com.aritradas.movieapp.data.remote.ApiServices
 import com.aritradas.movieapp.data.repository.MovieRepositoryImpl
 import com.aritradas.movieapp.domain.repository.MovieRepository
-import com.aritradas.movieapp.presentation.MoviesViewModel
+import com.aritradas.movieapp.presentation.movies.MoviesViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation

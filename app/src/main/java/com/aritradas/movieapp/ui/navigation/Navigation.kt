@@ -2,14 +2,12 @@ package com.aritradas.movieapp.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
-import androidx.navigation.Navigation
-import androidx.navigation.Navigator
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -19,13 +17,14 @@ import com.aritradas.movieapp.presentation.movies.FavouritesScreen
 import com.aritradas.movieapp.presentation.movies.MovieDetailScreen
 import com.aritradas.movieapp.presentation.movies.MoviesGridScreen
 import com.aritradas.movieapp.presentation.movies.state.MoviesEvent
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun Navigation(
     viewModel: MoviesViewModel? = null
 ) {
     val navController = rememberNavController()
-    val vm = viewModel ?: viewModel<MoviesViewModel>()
+    val vm = viewModel ?: koinViewModel<MoviesViewModel>()
 
     NavHost(
         navController = navController,
@@ -57,7 +56,7 @@ fun Navigation(
         ) { backStackEntry ->
             val movieId = backStackEntry.arguments?.getInt("movieId") ?: return@composable
             var detailState by remember { mutableStateOf<com.aritradas.movieapp.domain.model.MovieDetail?>(null) }
-            val uiState by vm.uiState
+            val uiState by vm.uiState.collectAsState()
 
             LaunchedEffect(movieId) {
                 detailState = vm.loadMovieDetails(movieId)
