@@ -15,7 +15,7 @@ navigationCompose = "2.8.4"
 viewModelCompose = "2.8.7"
 koin = "4.0.0"
 coil = "2.7.0"
-accompanist = "0.36.0"
+paging = "3.3.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -44,8 +44,8 @@ viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koin" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
-accompanist-shared-element = { group = "com.google.accompanist", name = "accompanist-shared-element", version.ref = "accompanist" }
-accompanist-navigation-animation = { group = "com.google.accompanist", name = "accompanist-navigation-animation", version.ref = "accompanist" }
+paging-runtime = { group = "androidx.paging", name = "paging-runtime-ktx", version.ref = "paging" }
+paging-compose = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
