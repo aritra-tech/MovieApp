@@ -20,30 +20,11 @@ class MovieRepositoryImpl(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : MovieRepository {
 
-    // Cache of movies we have loaded through paging, used for details/favourites screens.
-    private val _moviesCache = MutableStateFlow<List<Movie>>(emptyList())
-
-    private val _favourites = MutableStateFlow<Set<Int>>(emptySet())
-    override val favourites: Flow<Set<Int>> = _favourites.asStateFlow()
-
-    override fun getPagedMovies(query: String?): Flow<PagingData<Movie>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 20,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = {
-                MoviePagingSource(
-                    apiServices = apiServices,
-                    query = query,
-                    onPageLoaded = { movies ->
-                        _moviesCache.update { current ->
-                            (current + movies).distinctBy { it.id }
-                        }
-                    }
-                )
-            }
-        ).flow
+    override suspend fun getMovies(page: Int): List<Movie> {
+        return withContext(ioDispatcher) {
+            val response = apiServices.discoverMovies(page = page)
+            response.results
+        }
     }
 
     override suspend fun getMovieDetails(movieId: Int): MovieDetail {
@@ -52,15 +33,5 @@ class MovieRepositoryImpl(
         }
     }
 
-    override suspend fun toggleFavourite(movieId: Int) {
-        withContext(ioDispatcher) {
-            val current = _favourites.value
-            _favourites.value = if (current.contains(movieId)) {
-                current - movieId
-            } else {
-                current + movieId
-            }
-        }
-    }
 }
 

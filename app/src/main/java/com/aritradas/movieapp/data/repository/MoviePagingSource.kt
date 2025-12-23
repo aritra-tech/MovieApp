@@ -7,14 +7,13 @@ import com.aritradas.movieapp.domain.model.Movie
 
 class MoviePagingSource(
     private val apiServices: ApiServices,
-    private val query: String?,
     private val onPageLoaded: (List<Movie>) -> Unit
 ) : PagingSource<Int, Movie>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Movie> {
         return try {
             val page = params.key ?: 1
-            val response = apiServices.discoverMovies(page = page, query = query)
+            val response = apiServices.discoverMovies(page = page)
             val movies = response.results
 
             onPageLoaded(movies)

@@ -12,10 +12,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.aritradas.movieapp.presentation.movies.MoviesListScreens
 import com.aritradas.movieapp.presentation.movies.MoviesViewModel
-import com.aritradas.movieapp.presentation.movies.FavouritesScreen
-import com.aritradas.movieapp.presentation.movies.MovieDetailScreen
-import com.aritradas.movieapp.presentation.movies.MoviesGridScreen
 import com.aritradas.movieapp.presentation.movies.state.MoviesEvent
 import org.koin.androidx.compose.koinViewModel
 
@@ -31,7 +29,7 @@ fun Navigation(
         startDestination = Screens.Movies.route
     ) {
         composable(Screens.Movies.route) {
-            MoviesGridScreen(
+            MoviesListScreens(
                 viewModel = vm,
                 onMovieClick = { movieId ->
                     navController.navigate(Screens.Detail.create(movieId))
@@ -41,37 +39,37 @@ fun Navigation(
                 }
             )
         }
-        composable(Screens.Favourites.route) {
-            FavouritesScreen(
-                viewModel = vm,
-                onBack = { navController.popBackStack() },
-                onMovieClick = { movieId ->
-                    navController.navigate(Screens.Detail.create(movieId))
-                }
-            )
-        }
-        composable(
-            route = Screens.Detail.route,
-            arguments = listOf(navArgument("movieId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val movieId = backStackEntry.arguments?.getInt("movieId") ?: return@composable
-            var detailState by remember { mutableStateOf<com.aritradas.movieapp.domain.model.MovieDetail?>(null) }
-            val uiState by vm.uiState.collectAsState()
-
-            LaunchedEffect(movieId) {
-                detailState = vm.loadMovieDetails(movieId)
-            }
-
-            val movieDetail = detailState
-            if (movieDetail != null) {
-                MovieDetailScreen(
-                    movieDetail = movieDetail,
-                    isFavourite = uiState.favourites.contains(movieId),
-                    onBack = { navController.popBackStack() },
-                    onToggleFavourite = { vm.onEvent(MoviesEvent.OnToggleFavourite(movieId)) }
-                )
-            }
-        }
+//        composable(Screens.Favourites.route) {
+//            FavouritesScreen(
+//                viewModel = vm,
+//                onBack = { navController.popBackStack() },
+//                onMovieClick = { movieId ->
+//                    navController.navigate(Screens.Detail.create(movieId))
+//                }
+//            )
+//        }
+//        composable(
+//            route = Screens.Detail.route,
+//            arguments = listOf(navArgument("movieId") { type = NavType.IntType })
+//        ) { backStackEntry ->
+//            val movieId = backStackEntry.arguments?.getInt("movieId") ?: return@composable
+//            var detailState by remember { mutableStateOf<com.aritradas.movieapp.domain.model.MovieDetail?>(null) }
+//            val uiState by vm.uiState.collectAsState()
+//
+//            LaunchedEffect(movieId) {
+//                detailState = vm.loadMovieDetails(movieId)
+//            }
+//
+//            val movieDetail = detailState
+//            if (movieDetail != null) {
+//                MovieDetailScreen(
+//                    movieDetail = movieDetail,
+//                    isFavourite = uiState.favourites.contains(movieId),
+//                    onBack = { navController.popBackStack() },
+//                    onToggleFavourite = { vm.onEvent(MoviesEvent.OnToggleFavourite(movieId)) }
+//                )
+//            }
+//        }
     }
 }
 
