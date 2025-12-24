@@ -7,8 +7,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.aritradas.movieapp.presentation.movies.MoviesListScreens
+import com.aritradas.movieapp.presentation.favourites.FavouritesScreen
 import com.aritradas.movieapp.presentation.movies.MoviesViewModel
 import com.aritradas.movieapp.presentation.movieDetails.MovieDetailScreen
+import com.aritradas.movieapp.presentation.favourites.FavouritesViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -33,15 +35,16 @@ fun Navigation(
                 }
             )
         }
-//        composable(Screens.Favourites.route) {
-//            FavouritesScreen(
-//                viewModel = vm,
-//                onBack = { navController.popBackStack() },
-//                onMovieClick = { movieId ->
-//                    navController.navigate(Screens.Detail.create(movieId))
-//                }
-//            )
-//        }
+        composable(Screens.Favourites.route) {
+            val favouritesViewModel: FavouritesViewModel = koinViewModel()
+            FavouritesScreen(
+                viewModel = favouritesViewModel,
+                onBack = { navController.popBackStack() },
+                onMovieClick = { movieId ->
+                    navController.navigate(Screens.Detail.create(movieId))
+                }
+            )
+        }
         composable(
             route = Screens.Detail.route,
             arguments = listOf(navArgument("movieId") { type = NavType.IntType })
@@ -50,7 +53,10 @@ fun Navigation(
             
             MovieDetailScreen(
                 movieId = movieId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onFavoriteToggle = {
+                    vm.toggleFavorite(movieId)
+                }
             )
         }
     }

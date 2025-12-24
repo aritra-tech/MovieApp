@@ -4,8 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.aritradas.movieapp.data.remote.ApiServices
-import com.aritradas.movieapp.domain.model.Movie
-import com.aritradas.movieapp.domain.model.MovieDetail
+import com.aritradas.movieapp.domain.model.*
 import com.aritradas.movieapp.domain.repository.MovieRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers

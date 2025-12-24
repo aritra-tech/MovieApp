@@ -1,7 +1,6 @@
 package com.aritradas.movieapp.domain.repository
 
-import com.aritradas.movieapp.domain.model.Movie
-import com.aritradas.movieapp.domain.model.MovieDetail
+import com.aritradas.movieapp.domain.model.*
 import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 

@@ -30,16 +30,17 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun MovieDetailScreen(
     movieId: Int,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: MovieDetailViewModel = koinViewModel(),
+    onFavoriteToggle: () -> Unit = {}
 ) {
-    val viewModel: MovieDetailViewModel = koinViewModel()
-    val state by viewModel.state.collectAsState()
+    val currentState by viewModel.state.collectAsState()
 
     LaunchedEffect(movieId) {
         viewModel.loadMovieDetails(movieId)
     }
 
-    when (val currentState = state) {
+    when (val state = currentState) {
         is MovieDetailState.Loading -> {
             Box(
                 modifier = Modifier
@@ -53,8 +54,13 @@ fun MovieDetailScreen(
 
         is MovieDetailState.Success -> {
             MovieDetailContent(
-                movieDetail = currentState.movieDetail,
-                onBack = onBack
+                movieDetail = state.movieDetail,
+                isFavorite = state.isFavorite,
+                onBack = onBack,
+                onFavoriteClick = {
+                    viewModel.toggleFavorite(movieId)
+                    onFavoriteToggle()
+                }
             )
         }
 
@@ -66,7 +72,7 @@ fun MovieDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = currentState.message,
+                    text = currentState.toString(),
                     color = Color.White,
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -78,7 +84,9 @@ fun MovieDetailScreen(
 @Composable
 fun MovieDetailContent(
     movieDetail: MovieDetail,
-    onBack: () -> Unit
+    isFavorite: Boolean,
+    onBack: () -> Unit,
+    onFavoriteClick: () -> Unit
 ) {
     val IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original"
     val scrollState = rememberScrollState()
@@ -289,14 +297,14 @@ fun MovieDetailContent(
             }
 
             IconButton(
-                onClick = { /* TODO */ },
+                onClick = onFavoriteClick,
                 modifier = Modifier
                     .background(Color.Black.copy(alpha = 0.4f), CircleShape)
             ) {
                 Icon(
-                    imageVector = Icons.Filled.FavoriteBorder,
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                     contentDescription = "Favorite",
-                    tint = Color.White
+                    tint = if (isFavorite) Color.Red else Color.White
                 )
             }
         }

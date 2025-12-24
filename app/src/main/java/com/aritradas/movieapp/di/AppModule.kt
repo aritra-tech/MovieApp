@@ -4,9 +4,12 @@ import android.util.Log
 import com.aritradas.movieapp.BuildConfig
 import com.aritradas.movieapp.data.remote.ApiServices
 import com.aritradas.movieapp.data.repository.MovieRepositoryImpl
+import com.aritradas.movieapp.data.repository.FavoriteRepositoryImpl
 import com.aritradas.movieapp.domain.repository.MovieRepository
+import com.aritradas.movieapp.domain.repository.FavoriteRepository
 import com.aritradas.movieapp.presentation.movies.MoviesViewModel
 import com.aritradas.movieapp.presentation.movieDetails.MovieDetailViewModel
+import com.aritradas.movieapp.presentation.favourites.FavouritesViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.HttpTimeout
@@ -41,6 +44,7 @@ val appModule = module {
                         ignoreUnknownKeys = true
                         isLenient = true
                         prettyPrint = true
+                        encodeDefaults = true
                     }
                 )
             }
@@ -72,11 +76,19 @@ val appModule = module {
         MovieRepositoryImpl(apiServices = get())
     }
 
-    viewModel {
-        MoviesViewModel(repository = get())
+    single<FavoriteRepository> {
+        FavoriteRepositoryImpl(apiServices = get())
     }
 
     viewModel {
-        MovieDetailViewModel(repository = get())
+        MoviesViewModel(movieRepository = get(), favoriteRepository = get())
+    }
+
+    viewModel {
+        MovieDetailViewModel(movieRepository = get(), favoriteRepository = get())
+    }
+
+    viewModel {
+        FavouritesViewModel(favoriteRepository = get())
     }
 }
