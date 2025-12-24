@@ -5,10 +5,18 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Movie(
-    @SerialName("id") val id: Int,
-    @SerialName("title") val title: String,
-    @SerialName("overview") val overview: String = "",
-    @SerialName("poster_path") val posterPath: String? = null,
-    @SerialName("vote_average") val voteAverage: Double = 0.0,
-    @SerialName("release_date") val releaseDate: String? = null
+    @SerialName("adult") var adult: Boolean? = null,
+    @SerialName("backdrop_path") var backdropPath: String? = null,
+    @SerialName("genre_ids") val genreIds: List<Int> = emptyList(),
+    @SerialName("id") var id: Int? = null,
+    @SerialName("original_language") var originalLanguage: String? = null,
+    @SerialName("original_title") var originalTitle: String? = null,
+    @SerialName("overview") var overview: String? = null,
+    @SerialName("popularity") var popularity: Double? = null,
+    @SerialName("poster_path") var posterPath: String? = null,
+    @SerialName("release_date") var releaseDate: String? = null,
+    @SerialName("title") var title: String? = null,
+    @SerialName("video") var video: Boolean? = null,
+    @SerialName("vote_average") var voteAverage: Double? = null,
+    @SerialName("vote_count") var voteCount: Int? = null
 )

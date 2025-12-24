@@ -6,8 +6,6 @@ import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 
 interface MovieRepository {
-    val favourites: Flow<Set<Int>>
-    fun getPagedMovies(query: String?): Flow<PagingData<Movie>>
     suspend fun getMovieDetails(movieId: Int): MovieDetail
-    suspend fun toggleFavourite(movieId: Int)
+    fun getMoviesPager(query: String = ""): Flow<PagingData<Movie>>
 }
