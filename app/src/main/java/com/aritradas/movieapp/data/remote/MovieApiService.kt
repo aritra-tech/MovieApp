@@ -16,8 +16,11 @@ class ApiServices(
         val baseUrl = "https://api.themoviedb.org/3/discover/movie"
 
         return client.get(baseUrl) {
+            parameter("include_adult", "false")
+            parameter("include_video", "false")
             parameter("language", "en-US")
             parameter("page", page)
+            parameter("sort_by", "popularity.desc")
         }.body()
     }
 
