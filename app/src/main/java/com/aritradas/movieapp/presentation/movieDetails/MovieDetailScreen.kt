@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.aritradas.movieapp.domain.model.MovieDetail
 import com.aritradas.movieapp.presentation.movieDetails.state.MovieDetailState
+import com.aritradas.movieapp.ui.theme.FavoriteRed
+import com.aritradas.movieapp.ui.theme.StarGold
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -48,7 +50,7 @@ fun MovieDetailScreen(
                     .background(Color(0xFF0F0D13)),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFFE91E63))
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
 
@@ -94,7 +96,7 @@ fun MovieDetailContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0F0D13))
+            .background(MaterialTheme.colorScheme.background)
     ) {
         AsyncImage(
             model = IMAGE_BASE_URL + movieDetail.posterPath,
@@ -112,7 +114,7 @@ fun MovieDetailContent(
                     Brush.verticalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            Color(0xFF0F0D13)
+                            MaterialTheme.colorScheme.background
                         ),
                         startY = 0f,
                         endY = 1200f
@@ -188,7 +190,7 @@ fun MovieDetailContent(
                         movieDetail.genres.firstOrNull()?.let { genre ->
                             Surface(
                                 shape = CircleShape,
-                                color = Color(0xFF673AB7).copy(alpha = 0.3f),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                                 border = BorderStroke(
                                     width = 1.dp,
                                     color = Color.White.copy(alpha = 0.1f)
@@ -201,7 +203,7 @@ fun MovieDetailContent(
                                         vertical = 4.dp
                                     ),
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = Color(0xFFB39DDB)
+                                    color = Color.White.copy(alpha = 0.8f)
                                 )
                             }
                         }
@@ -217,7 +219,7 @@ fun MovieDetailContent(
                             .clip(CircleShape)
                             .background(
                                 Brush.horizontalGradient(
-                                    colors = listOf(Color(0xFFE91E63), Color(0xFFFF4081))
+                                    colors = listOf(MaterialTheme.colorScheme.primary, Color(0xFFC084FC))
                                 )
                             ),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -258,16 +260,21 @@ fun MovieDetailContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                IconButton(
+                Surface(
                     onClick = onBack,
-                    modifier = Modifier
-                        .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                    modifier = Modifier.size(56.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
 
                 Surface(
@@ -282,7 +289,7 @@ fun MovieDetailContent(
                         Icon(
                             imageVector = Icons.Filled.Star,
                             contentDescription = null,
-                            tint = Color(0xFFFFC107),
+                            tint = StarGold,
                             modifier = Modifier.size(18.dp)
                         )
                         Text(
@@ -296,16 +303,21 @@ fun MovieDetailContent(
                 }
             }
 
-            IconButton(
+            Surface(
                 onClick = onFavoriteClick,
-                modifier = Modifier
-                    .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                modifier = Modifier.size(56.dp)
             ) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = "Favorite",
-                    tint = if (isFavorite) Color.Red else Color.White
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite) FavoriteRed else Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
         }
     }
