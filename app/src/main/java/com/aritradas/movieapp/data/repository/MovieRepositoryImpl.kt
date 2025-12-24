@@ -23,13 +23,13 @@ class MovieRepositoryImpl(
         }
     }
 
-    override fun getMoviesPager(): Flow<PagingData<Movie>> {
+    override fun getMoviesPager(query: String): Flow<PagingData<Movie>> {
         return Pager(
             config = PagingConfig(
                 pageSize = ITEMS_PER_PAGE,
                 enablePlaceholders = false
             ),
-            pagingSourceFactory = { MoviePagingSource(apiServices) }
+            pagingSourceFactory = { MoviePagingSource(apiServices, query) }
         ).flow
     }
 

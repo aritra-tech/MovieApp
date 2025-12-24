@@ -24,6 +24,20 @@ class ApiServices(
         }.body()
     }
 
+    suspend fun searchMovies(
+        query: String,
+        page: Int,
+    ): DiscoverMoviesResponse {
+        val baseUrl = "https://api.themoviedb.org/3/search/movie"
+
+        return client.get(baseUrl) {
+            parameter("include_adult", "false")
+            parameter("language", "en-US")
+            parameter("page", page)
+            parameter("query", query)
+        }.body()
+    }
+
     suspend fun getMovieDetails(movieId: Int): MovieDetail {
         return client.get("https://api.themoviedb.org/3/movie/$movieId") {
             parameter("language", "en-US")
