@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -54,6 +55,7 @@ fun MoviesListScreens(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    // Fixed: Properly call suspend function in LaunchedEffect
     LaunchedEffect(Unit) {
         viewModel.loadMovies()
     }
@@ -69,44 +71,74 @@ fun MoviesListScreens(
                             contentDescription = "Favourites"
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                }
             )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
         ) {
+            when {
+                // Show loading indicator
+                state.isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
 
-            LazyVerticalGrid(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 16.dp),
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 32.dp)
-            ) {
-                items(
-                    count = state.movies.size,
-                    key = { index -> state.movies[index].id }
-                ) { index ->
-                    val movie = state.movies[index]
-                    val isFav = state.favourites.contains(movie.id)
-                    MovieCard(
-                        movie = movie,
-                        isFavourite = isFav,
-                        onClick = { onMovieClick(movie.id) }
+                // Show error message
+                state.isError != null -> {
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Error: ${state.isError}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                // Show movies list
+                state.movies.isNotEmpty() -> {
+                    LazyVerticalGrid(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 16.dp),
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(bottom = 32.dp)
+                    ) {
+                        items(
+                            count = state.movies.size,
+                            key = { index -> state.movies[index].id!! }
+                        ) { index ->
+                            val movie = state.movies[index]
+                            MovieCard(
+                                movie = movie,
+                                onClick = { onMovieClick(movie.id!!) }
+                            )
+                        }
+                    }
+                }
+
+                // Show empty state
+                else -> {
+                    Text(
+                        text = "No movies found",
+                        modifier = Modifier.align(Alignment.Center),
+                        style = MaterialTheme.typography.bodyLarge
                     )
                 }
             }
-
         }
     }
 }
@@ -114,11 +146,12 @@ fun MoviesListScreens(
 @Composable
 fun MovieCard(
     movie: Movie,
-    isFavourite: Boolean,
     onClick: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
     var scale by remember { mutableFloatStateOf(1f) }
+    val IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
+
     val animatedScale by animateFloatAsState(
         targetValue = scale,
         animationSpec = spring(
@@ -134,13 +167,12 @@ fun MovieCard(
             .scale(animatedScale)
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onLongPress = {
-                        scope.launch {
-                            scale = 0.96f
-                        }
+                    onPress = {
+                        scale = 0.96f
+                        tryAwaitRelease()
+                        scale = 1f
                     },
                     onTap = {
-                        scale = 1f
                         onClick()
                     }
                 )
@@ -150,7 +182,7 @@ fun MovieCard(
     ) {
         Box {
             AsyncImage(
-                model = movie.posterPath,
+                model = IMAGE_BASE_URL + movie.posterPath,
                 contentDescription = movie.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -177,15 +209,19 @@ fun MovieCard(
                     .align(Alignment.BottomStart)
                     .padding(12.dp)
             ) {
-                Text(
-                    text = movie.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                movie.title?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 Text(
                     text = movie.releaseDate ?: "",
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
