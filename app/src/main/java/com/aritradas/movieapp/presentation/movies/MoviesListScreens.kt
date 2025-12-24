@@ -1,6 +1,9 @@
 package com.aritradas.movieapp.presentation.movies
 
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -65,11 +68,14 @@ import com.aritradas.movieapp.domain.model.Movie
 import com.aritradas.movieapp.ui.theme.FavoriteRed
 import com.aritradas.movieapp.ui.theme.StarGold
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MoviesListScreens(
     viewModel: MoviesViewModel,
-    onMovieClick: (Int) -> Unit,
-    onFavouritesClick: () -> Unit
+    onMovieClick: (Int, String) -> Unit,
+    onFavouritesClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     val moviePager = viewModel.moviePager.collectAsLazyPagingItems()
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -152,7 +158,9 @@ fun MoviesListScreens(
                             moviePager = moviePager,
                             isFavorite = { id -> uiState.favourites.contains(id) },
                             onFavoriteClick = { id -> viewModel.toggleFavorite(id) },
-                            onMovieClick = onMovieClick
+                            onMovieClick = onMovieClick,
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedContentScope = animatedContentScope
                         )
                     }
 
@@ -227,12 +235,15 @@ fun SearchBar(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MovieGrid(
     moviePager: LazyPagingItems<Movie>,
     isFavorite: (Int) -> Boolean,
     onFavoriteClick: (Int) -> Unit,
-    onMovieClick: (Int) -> Unit
+    onMovieClick: (Int, String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     LazyVerticalGrid(
         modifier = Modifier
@@ -255,7 +266,9 @@ fun MovieGrid(
                     movie = movie,
                     isFavorite = isFavorite(movie.id!!),
                     onFavoriteClick = { onFavoriteClick(movie.id!!) },
-                    onClick = { onMovieClick(movie.id!!) }
+                    onClick = { onMovieClick(movie.id!!, movie.posterPath ?: "") },
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope
                 )
             }
         }
@@ -302,12 +315,15 @@ fun ErrorMessage(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MovieCard(
     movie: Movie,
     isFavorite: Boolean,
     onFavoriteClick: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
@@ -338,12 +354,19 @@ fun MovieCard(
         tonalElevation = 8.dp
     ) {
         Box {
-            AsyncImage(
-                model = IMAGE_BASE_URL + movie.posterPath,
-                contentDescription = movie.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            with(sharedTransitionScope) {
+                AsyncImage(
+                    model = IMAGE_BASE_URL + movie.posterPath,
+                    contentDescription = movie.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .sharedElement(
+                            rememberSharedContentState(key = "movie_poster_${movie.id}"),
+                            animatedVisibilityScope = animatedContentScope
+                        )
+                )
+            }
 
             Box(
                 modifier = Modifier
