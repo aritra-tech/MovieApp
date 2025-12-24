@@ -19,6 +19,7 @@ fun Navigation(
 ) {
     val navController = rememberNavController()
     val vm = viewModel ?: koinViewModel<MoviesViewModel>()
+    val favouritesViewModel: FavouritesViewModel = koinViewModel()
 
     NavHost(
         navController = navController,
@@ -36,7 +37,6 @@ fun Navigation(
             )
         }
         composable(Screens.Favourites.route) {
-            val favouritesViewModel: FavouritesViewModel = koinViewModel()
             FavouritesScreen(
                 viewModel = favouritesViewModel,
                 onBack = { navController.popBackStack() },

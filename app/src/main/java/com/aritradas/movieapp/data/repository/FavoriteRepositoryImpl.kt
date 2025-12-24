@@ -3,6 +3,7 @@ package com.aritradas.movieapp.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import com.aritradas.movieapp.data.paging.FavoriteMoviesPagingSource
 import com.aritradas.movieapp.data.remote.ApiServices
 import com.aritradas.movieapp.domain.model.*
 import com.aritradas.movieapp.domain.repository.FavoriteRepository

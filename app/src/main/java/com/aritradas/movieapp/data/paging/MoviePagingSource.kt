@@ -1,4 +1,4 @@
-package com.aritradas.movieapp.data.repository
+package com.aritradas.movieapp.data.paging
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
