@@ -25,6 +25,10 @@ class MoviesViewModel(
     private val repository: MovieRepository
 ) : ViewModel() {
 
+    init {
+        fetchAccountAndFavorites()
+    }
+
     private val _uiState = MutableStateFlow(MoviesUiState())
     val uiState: StateFlow<MoviesUiState> = _uiState.asStateFlow()
 
@@ -32,10 +36,26 @@ class MoviesViewModel(
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     val moviePager: Flow<PagingData<Movie>> = _searchQuery
-        .debounce(500L)
+        .debounce(400L)
         .distinctUntilChanged()
         .flatMapLatest { query ->
             repository.getMoviesPager(query)
+        }
+        .cachedIn(viewModelScope)
+
+    private val _refreshTrigger = MutableStateFlow(0)
+
+    val favoriteMoviesPager: Flow<PagingData<Movie>> = _uiState
+        .map { it.accountId }
+        .distinctUntilChanged()
+        .flatMapLatest { accountId ->
+            if (accountId != null) {
+                _refreshTrigger.flatMapLatest {
+                    repository.getFavoriteMoviesPager(accountId)
+                }
+            } else {
+                kotlinx.coroutines.flow.flowOf(PagingData.empty())
+            }
         }
         .cachedIn(viewModelScope)
 
@@ -43,6 +63,44 @@ class MoviesViewModel(
         _searchQuery.value = query
         viewModelScope.launch {
             _uiState.update { it.copy(searchQuery = query) }
+        }
+    }
+
+    private fun fetchAccountAndFavorites() {
+        viewModelScope.launch {
+            try {
+                val account = repository.getAccountDetails()
+                _uiState.update { it.copy(accountId = account.id) }
+                
+                // Fetch first page of favorites to populate initial state
+                val favorites = repository.getFavoriteMovies(account.id, 1)
+                val favoriteIds = favorites.results.map { it.id }.filterNotNull().toSet()
+                _uiState.update { it.copy(favourites = favoriteIds) }
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun toggleFavorite(movieId: Int) {
+        val accountId = _uiState.value.accountId ?: return
+        val isCurrentlyFavorite = _uiState.value.favourites.contains(movieId)
+        
+        viewModelScope.launch {
+            try {
+                repository.addFavorite(accountId, movieId, !isCurrentlyFavorite)
+                _uiState.update { state ->
+                    val newFavorites = if (isCurrentlyFavorite) {
+                        state.favourites - movieId
+                    } else {
+                        state.favourites + movieId
+                    }
+                    state.copy(favourites = newFavorites)
+                }
+                _refreshTrigger.value += 1
+            } catch (e: Exception) {
+                // Handle error
+            }
         }
     }
 }

@@ -20,9 +20,28 @@ class MovieDetailViewModel(
             _state.value = MovieDetailState.Loading
             try {
                 val detail = repository.getMovieDetails(movieId)
-                _state.value = MovieDetailState.Success(detail)
+                val accountStates = repository.getMovieAccountStates(movieId)
+                _state.value = MovieDetailState.Success(
+                    movieDetail = detail,
+                    isFavorite = accountStates.favorite
+                )
             } catch (e: Exception) {
                 _state.value = MovieDetailState.Error(e.message ?: "Failed to load movie details")
+            }
+        }
+    }
+
+    fun toggleFavorite(movieId: Int) {
+        val currentState = _state.value as? MovieDetailState.Success ?: return
+        val newFavoriteStatus = !currentState.isFavorite
+        
+        viewModelScope.launch {
+            try {
+                val account = repository.getAccountDetails()
+                repository.addFavorite(account.id, movieId, newFavoriteStatus)
+                _state.value = currentState.copy(isFavorite = newFavoriteStatus)
+            } catch (e: Exception) {
+                // Optionally handle error
             }
         }
     }

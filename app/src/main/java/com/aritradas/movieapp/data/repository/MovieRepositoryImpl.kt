@@ -4,8 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.aritradas.movieapp.data.remote.ApiServices
-import com.aritradas.movieapp.domain.model.Movie
-import com.aritradas.movieapp.domain.model.MovieDetail
+import com.aritradas.movieapp.domain.model.*
 import com.aritradas.movieapp.domain.repository.MovieRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +29,44 @@ class MovieRepositoryImpl(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { MoviePagingSource(apiServices, query) }
+        ).flow
+    }
+
+    override suspend fun getAccountDetails(): AccountDetails {
+        return withContext(ioDispatcher) {
+            apiServices.getAccountDetails()
+        }
+    }
+
+    override suspend fun addFavorite(
+        accountId: Int,
+        mediaId: Int,
+        isFavorite: Boolean
+    ): FavoriteResponse {
+        return withContext(ioDispatcher) {
+            apiServices.addFavorite(accountId, mediaId, isFavorite)
+        }
+    }
+
+    override suspend fun getFavoriteMovies(accountId: Int, page: Int): DiscoverMoviesResponse {
+        return withContext(ioDispatcher) {
+            apiServices.getFavoriteMovies(accountId, page)
+        }
+    }
+
+    override suspend fun getMovieAccountStates(movieId: Int): MovieAccountState {
+        return withContext(ioDispatcher) {
+            apiServices.getMovieAccountStates(movieId)
+        }
+    }
+
+    override fun getFavoriteMoviesPager(accountId: Int): Flow<PagingData<Movie>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = ITEMS_PER_PAGE,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = { FavoriteMoviesPagingSource(apiServices, accountId) }
         ).flow
     }
 

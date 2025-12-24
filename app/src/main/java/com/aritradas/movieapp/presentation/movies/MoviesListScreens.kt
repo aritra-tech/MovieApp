@@ -127,8 +127,11 @@ fun MoviesListScreens(
                         }
 
                         moviePager.itemCount > 0 -> {
+                            val uiState by viewModel.uiState.collectAsState()
                             MovieGrid(
                                 moviePager = moviePager,
+                                isFavorite = { id -> uiState.favourites.contains(id) },
+                                onFavoriteClick = { id -> viewModel.toggleFavorite(id) },
                                 onMovieClick = onMovieClick
                             )
                         }
@@ -200,6 +203,8 @@ fun SearchBar(
 @Composable
 fun MovieGrid(
     moviePager: LazyPagingItems<Movie>,
+    isFavorite: (Int) -> Boolean,
+    onFavoriteClick: (Int) -> Unit,
     onMovieClick: (Int) -> Unit
 ) {
     LazyVerticalGrid(
@@ -221,6 +226,8 @@ fun MovieGrid(
             moviePager[index]?.let { movie ->
                 MovieCard(
                     movie = movie,
+                    isFavorite = isFavorite(movie.id!!),
+                    onFavoriteClick = { onFavoriteClick(movie.id!!) },
                     onClick = { onMovieClick(movie.id!!) }
                 )
             }
@@ -271,6 +278,8 @@ fun ErrorMessage(
 @Composable
 fun MovieCard(
     movie: Movie,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -345,15 +354,16 @@ fun MovieCard(
                     .padding(12.dp)
             ) {
                 Surface(
+                    onClick = onFavoriteClick,
                     shape = MaterialTheme.shapes.extraLarge,
                     color = Color.Black.copy(alpha = 0.4f),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
-                            imageVector = Icons.Filled.FavoriteBorder,
-                            contentDescription = "Add to Favourites",
-                            tint = Color.White,
+                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = if (isFavorite) "Remove from Favourites" else "Add to Favourites",
+                            tint = if (isFavorite) Color.Red else Color.White,
                             modifier = Modifier.size(20.dp)
                         )
                     }
