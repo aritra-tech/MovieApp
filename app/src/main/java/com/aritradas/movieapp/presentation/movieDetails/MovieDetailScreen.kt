@@ -1,5 +1,8 @@
 package com.aritradas.movieapp.presentation.movieDetails
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -29,12 +32,16 @@ import com.aritradas.movieapp.ui.theme.FavoriteRed
 import com.aritradas.movieapp.ui.theme.StarGold
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MovieDetailScreen(
     movieId: Int,
+    initialPosterPath: String,
     onBack: () -> Unit,
     viewModel: MovieDetailViewModel = koinViewModel(),
-    onFavoriteToggle: () -> Unit = {}
+    onFavoriteToggle: () -> Unit = {},
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     val currentState by viewModel.state.collectAsState()
 
@@ -42,53 +49,105 @@ fun MovieDetailScreen(
         viewModel.loadMovieDetails(movieId)
     }
 
-    when (val state = currentState) {
-        is MovieDetailState.Loading -> {
-            Box(
+    val IMAGE_BASE_URL_W500 = "https://image.tmdb.org/t/p/w500"
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF0F0D13))
+    ) {
+        if (currentState is MovieDetailState.Loading || currentState is MovieDetailState.Error) {
+            with(sharedTransitionScope) {
+                AsyncImage(
+                    model = "$IMAGE_BASE_URL_W500/$initialPosterPath",
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.6f)
+                        .sharedElement(
+                            rememberSharedContentState(key = "movie_poster_$movieId"),
+                            animatedVisibilityScope = animatedContentScope
+                        )
+                )
+            }
+            
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF0F0D13)),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                Surface(
+                    onClick = onBack,
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                    modifier = Modifier.size(56.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
             }
         }
 
-        is MovieDetailState.Success -> {
-            MovieDetailContent(
-                movieDetail = state.movieDetail,
-                isFavorite = state.isFavorite,
-                onBack = onBack,
-                onFavoriteClick = {
-                    viewModel.toggleFavorite(movieId)
-                    onFavoriteToggle()
+        when (val state = currentState) {
+            is MovieDetailState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
-            )
-        }
+            }
 
-        is MovieDetailState.Error -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF0F0D13)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = currentState.toString(),
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyLarge
+            is MovieDetailState.Success -> {
+                MovieDetailContent(
+                    movieDetail = state.movieDetail,
+                    isFavorite = state.isFavorite,
+                    onBack = onBack,
+                    onFavoriteClick = {
+                        viewModel.toggleFavorite(movieId)
+                        onFavoriteToggle()
+                    },
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope
                 )
+            }
+            
+            is MovieDetailState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = state.message,
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MovieDetailContent(
     movieDetail: MovieDetail,
     isFavorite: Boolean,
     onBack: () -> Unit,
-    onFavoriteClick: () -> Unit
+    onFavoriteClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     val IMAGE_BASE_URL = "https://image.tmdb.org/t/p/original"
     val scrollState = rememberScrollState()
@@ -98,14 +157,20 @@ fun MovieDetailContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        AsyncImage(
-            model = IMAGE_BASE_URL + movieDetail.posterPath,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.6f)
-        )
+        with(sharedTransitionScope) {
+            AsyncImage(
+                model = IMAGE_BASE_URL + movieDetail.posterPath,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.6f)
+                    .sharedElement(
+                        rememberSharedContentState(key = "movie_poster_${movieDetail.id}"),
+                        animatedVisibilityScope = animatedContentScope
+                    )
+            )
+        }
 
         Box(
             modifier = Modifier
