@@ -1,5 +1,8 @@
 package com.aritradas.movieapp.presentation.favourites
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -31,11 +34,14 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.aritradas.movieapp.presentation.movies.ErrorMessage
 import com.aritradas.movieapp.presentation.movies.MovieGrid
 import com.aritradas.movieapp.presentation.favourites.FavouritesViewModel
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun FavouritesScreen(
     viewModel: FavouritesViewModel,
     onBack: () -> Unit,
-    onMovieClick: (Int) -> Unit
+    onMovieClick: (Int, String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope
 ) {
     val favoriteMovies = viewModel.favoriteMoviesPager.collectAsLazyPagingItems()
 
@@ -118,7 +124,9 @@ fun FavouritesScreen(
                             moviePager = favoriteMovies,
                             isFavorite = { id -> uiState.favourites.contains(id) },
                             onFavoriteClick = { id -> viewModel.toggleFavorite(id) },
-                            onMovieClick = onMovieClick
+                            onMovieClick = onMovieClick,
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedContentScope = animatedContentScope
                         )
                     }
 
