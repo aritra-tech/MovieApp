@@ -8,10 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -127,7 +125,10 @@ fun MovieDetailContent(
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(32.dp),
                 color = Color.White.copy(alpha = 0.1f),
-                border = BoxContentBorder()
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Color.White.copy(alpha = 0.1f)
+                )
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -151,20 +152,46 @@ fun MovieDetailContent(
                         val year = movieDetail.releaseDate?.take(4) ?: ""
                         val runtime = movieDetail.runtime?.let { "${it / 60}h ${it % 60}m" } ?: ""
 
-                        InfoChip(text = year, icon = null)
+                        InfoChip(
+                            text = year,
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        )
                         Text("•", color = Color.White.copy(alpha = 0.4f))
-                        InfoChip(text = runtime, icon = null)
+                        InfoChip(
+                            text = runtime,
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Default.Schedule,
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        )
                         Text("•", color = Color.White.copy(alpha = 0.4f))
-                        
+
                         movieDetail.genres.firstOrNull()?.let { genre ->
                             Surface(
                                 shape = CircleShape,
                                 color = Color(0xFF673AB7).copy(alpha = 0.3f),
-                                border = BoxContentBorder()
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = Color.White.copy(alpha = 0.1f)
+                                )
                             ) {
                                 Text(
                                     text = genre.name,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                    modifier = Modifier.padding(
+                                        horizontal = 12.dp,
+                                        vertical = 4.dp
+                                    ),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = Color(0xFFB39DDB)
                                 )
@@ -277,7 +304,7 @@ fun MovieDetailContent(
 }
 
 @Composable
-fun InfoChip(text: String, icon: (() -> Unit)?) {
+fun InfoChip(text: String, icon: @Composable (() -> Unit)?) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -299,7 +326,10 @@ fun DetailSection(title: String, content: String) {
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(32.dp),
         color = Color.White.copy(alpha = 0.05f),
-        border = BoxContentBorder()
+        border = BorderStroke(
+            width = 1.dp,
+            color = Color.White.copy(alpha = 0.1f)
+        )
     ) {
         Column(
             modifier = Modifier
@@ -324,9 +354,3 @@ fun DetailSection(title: String, content: String) {
         }
     }
 }
-
-@Composable
-fun BoxContentBorder() = BorderStroke(
-    width = 1.dp,
-    color = Color.White.copy(alpha = 0.1f)
-)

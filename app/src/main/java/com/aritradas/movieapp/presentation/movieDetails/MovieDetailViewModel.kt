@@ -2,7 +2,6 @@ package com.aritradas.movieapp.presentation.movieDetails
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aritradas.movieapp.domain.model.MovieDetail
 import com.aritradas.movieapp.domain.repository.MovieRepository
 import com.aritradas.movieapp.presentation.movieDetails.state.MovieDetailState
 import kotlinx.coroutines.flow.MutableStateFlow
