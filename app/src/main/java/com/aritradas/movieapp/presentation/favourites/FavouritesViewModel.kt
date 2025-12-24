@@ -1,4 +1,4 @@
-package com.aritradas.movieapp.presentation.movies
+package com.aritradas.movieapp.presentation.favourites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,42 +6,37 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.aritradas.movieapp.domain.model.Movie
 import com.aritradas.movieapp.domain.repository.FavoriteRepository
-import com.aritradas.movieapp.domain.repository.MovieRepository
 import com.aritradas.movieapp.presentation.movies.state.MoviesUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-class MoviesViewModel(
-    private val movieRepository: MovieRepository,
+@OptIn(ExperimentalCoroutinesApi::class)
+class FavouritesViewModel(
     private val favoriteRepository: FavoriteRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MoviesUiState())
     val uiState: StateFlow<MoviesUiState> = _uiState.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow("")
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+    private val _refreshTrigger = MutableStateFlow(0)
 
-    val moviePager: Flow<PagingData<Movie>> = _searchQuery
-        .debounce(400L)
+    val favoriteMoviesPager: Flow<PagingData<Movie>> = _uiState
+        .map { it.accountId }
         .distinctUntilChanged()
-        .flatMapLatest { query ->
-            movieRepository.getMoviesPager(query)
+        .flatMapLatest { accountId ->
+            if (accountId != null) {
+                _refreshTrigger.flatMapLatest {
+                    favoriteRepository.getFavoriteMoviesPager(accountId)
+                }
+            } else {
+                flowOf(PagingData.empty())
+            }
         }
         .cachedIn(viewModelScope)
 
     init {
         fetchAccountAndFavorites()
-    }
-
-    fun onSearch(query: String) {
-        _searchQuery.value = query
-        viewModelScope.launch {
-            _uiState.update { it.copy(searchQuery = query) }
-        }
     }
 
     private fun fetchAccountAndFavorites() {
@@ -74,6 +69,7 @@ class MoviesViewModel(
                     }
                     state.copy(favourites = newFavorites)
                 }
+                _refreshTrigger.value += 1
             } catch (e: Exception) {
                 // Handle error
             }
