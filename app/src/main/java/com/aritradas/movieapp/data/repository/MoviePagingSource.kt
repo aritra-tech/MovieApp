@@ -6,8 +6,7 @@ import com.aritradas.movieapp.data.remote.ApiServices
 import com.aritradas.movieapp.domain.model.Movie
 
 class MoviePagingSource(
-    private val apiServices: ApiServices,
-    private val onPageLoaded: (List<Movie>) -> Unit
+    private val apiServices: ApiServices
 ) : PagingSource<Int, Movie>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Movie> {
@@ -16,12 +15,10 @@ class MoviePagingSource(
             val response = apiServices.discoverMovies(page = page)
             val movies = response.results
 
-            onPageLoaded(movies)
-
             LoadResult.Page(
                 data = movies,
                 prevKey = if (page == 1) null else page - 1,
-                nextKey = if (page < response.totalPages) page + 1 else null
+                nextKey = if (page < response.totalPages!!) page + 1 else null
             )
         } catch (t: Throwable) {
             LoadResult.Error(t)
@@ -35,5 +32,3 @@ class MoviePagingSource(
         }
     }
 }
-
-

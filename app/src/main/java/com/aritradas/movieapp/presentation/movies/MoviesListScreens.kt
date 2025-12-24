@@ -1,12 +1,11 @@
 package com.aritradas.movieapp.presentation.movies
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -22,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -37,41 +37,33 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImage
 import com.aritradas.movieapp.domain.model.Movie
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoviesListScreens(
     viewModel: MoviesViewModel,
     onMovieClick: (Int) -> Unit,
     onFavouritesClick: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
-
-    LaunchedEffect(Unit) {
-        viewModel.loadMovies()
-    }
+    val moviePager = viewModel.moviePager.collectAsLazyPagingItems()
 
     Scaffold(
         topBar = {
@@ -94,54 +86,26 @@ fun MoviesListScreens(
                 .padding(paddingValues)
         ) {
             when {
-                state.isLoading -> {
-                    CircularProgressIndicator(
+                moviePager.loadState.refresh is LoadState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+
+                moviePager.loadState.refresh is LoadState.Error -> {
+                    val error = (moviePager.loadState.refresh as LoadState.Error).error
+                    ErrorMessage(
+                        message = error.message ?: "Unknown error",
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
 
-                state.isError != null -> {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Error: ${state.isError}",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                moviePager.itemCount > 0 -> {
+                    MovieGrid(
+                        moviePager = moviePager,
+                        onMovieClick = onMovieClick
+                    )
                 }
 
-                // Show movies list
-                state.movies.isNotEmpty() -> {
-                    LazyVerticalGrid(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp)
-                            .padding(top = 16.dp),
-                        columns = GridCells.Fixed(2),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 32.dp)
-                    ) {
-                        items(
-                            count = state.movies.size,
-                            key = { index -> state.movies[index].id!! }
-                        ) { index ->
-                            val movie = state.movies[index]
-                            MovieCard(
-                                movie = movie,
-                                onClick = { onMovieClick(movie.id!!) }
-                            )
-                        }
-                    }
-                }
-
-                else -> {
+                moviePager.loadState.refresh is LoadState.NotLoading && moviePager.itemCount == 0 -> {
                     Text(
                         text = "No movies found",
                         modifier = Modifier.align(Alignment.Center),
@@ -150,6 +114,77 @@ fun MoviesListScreens(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun MovieGrid(
+    moviePager: LazyPagingItems<Movie>,
+    onMovieClick: (Int) -> Unit
+) {
+    LazyVerticalGrid(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        columns = GridCells.Fixed(2),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
+    ) {
+        items(
+            count = moviePager.itemCount,
+            key = { index ->
+                val movie = moviePager[index]
+                movie?.id ?: index
+            }
+        ) { index ->
+            moviePager[index]?.let { movie ->
+                MovieCard(
+                    movie = movie,
+                    onClick = { onMovieClick(movie.id!!) }
+                )
+            }
+        }
+
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            when (val appendState = moviePager.loadState.append) {
+                is LoadState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                    }
+                }
+                is LoadState.Error -> {
+                    ErrorMessage(
+                        message = appendState.error.message ?: "Could not load more",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+                else -> {}
+            }
+        }
+    }
+}
+
+@Composable
+fun ErrorMessage(
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Error: $message",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
