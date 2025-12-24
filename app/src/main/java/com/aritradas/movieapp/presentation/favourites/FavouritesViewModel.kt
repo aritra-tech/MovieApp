@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import com.aritradas.movieapp.domain.model.Movie
 import com.aritradas.movieapp.domain.repository.FavoriteRepository
 import com.aritradas.movieapp.presentation.movies.state.MoviesUiState
@@ -21,19 +22,28 @@ class FavouritesViewModel(
 
     private val _refreshTrigger = MutableStateFlow(0)
 
-    val favoriteMoviesPager: Flow<PagingData<Movie>> = _uiState
-        .map { it.accountId }
-        .distinctUntilChanged()
-        .flatMapLatest { accountId ->
-            if (accountId != null) {
-                _refreshTrigger.flatMapLatest {
-                    favoriteRepository.getFavoriteMoviesPager(accountId)
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    val favoriteMoviesPager: Flow<PagingData<Movie>> = combine(
+        _uiState.map { it.accountId }.distinctUntilChanged(),
+        _searchQuery,
+        _refreshTrigger
+    ) { accountId, query, _ ->
+        accountId to query
+    }.flatMapLatest { (accountId, query) ->
+        if (accountId != null) {
+            favoriteRepository.getFavoriteMoviesPager(accountId)
+                .map { pagingData ->
+                    if (query.isBlank()) pagingData
+                    else pagingData.filter { movie ->
+                        movie.title?.contains(query, ignoreCase = true) == true
+                    }
                 }
-            } else {
-                flowOf(PagingData.empty())
-            }
+        } else {
+            flowOf(PagingData.empty())
         }
-        .cachedIn(viewModelScope)
+    }.cachedIn(viewModelScope)
 
     init {
         fetchAccountAndFavorites()
@@ -74,5 +84,9 @@ class FavouritesViewModel(
                 // Handle error
             }
         }
+    }
+
+    fun onSearch(query: String) {
+        _searchQuery.value = query
     }
 }
