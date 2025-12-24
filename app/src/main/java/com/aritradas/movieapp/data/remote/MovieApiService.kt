@@ -41,6 +41,7 @@ class ApiServices(
     suspend fun getMovieDetails(movieId: Int): MovieDetail {
         return client.get("https://api.themoviedb.org/3/movie/$movieId") {
             parameter("language", "en-US")
+            parameter("append_to_response", "credits")
         }.body()
     }
 }

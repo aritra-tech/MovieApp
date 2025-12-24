@@ -1,12 +1,12 @@
 package com.aritradas.movieapp.di
 
-import android.R.attr.level
 import android.util.Log
 import com.aritradas.movieapp.BuildConfig
 import com.aritradas.movieapp.data.remote.ApiServices
 import com.aritradas.movieapp.data.repository.MovieRepositoryImpl
 import com.aritradas.movieapp.domain.repository.MovieRepository
 import com.aritradas.movieapp.presentation.movies.MoviesViewModel
+import com.aritradas.movieapp.presentation.movieDetails.MovieDetailViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.HttpTimeout
@@ -74,5 +74,9 @@ val appModule = module {
 
     viewModel {
         MoviesViewModel(repository = get())
+    }
+
+    viewModel {
+        MovieDetailViewModel(repository = get())
     }
 }
