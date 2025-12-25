@@ -256,10 +256,6 @@ fun MovieGrid(
     ) {
         items(
             count = moviePager.itemCount,
-            key = { index ->
-                val movie = moviePager[index]
-                movie?.id ?: index
-            }
         ) { index ->
             moviePager[index]?.let { movie ->
                 MovieCard(
