@@ -32,30 +32,6 @@ The project follows **Clean Architecture** principles combined with the **MVVM (
     -   **ViewModels**: Manage UI state and handle business logic.
     -   **UI**: Jetpack Compose screens and components.
 
-### Diagram
-
-```mermaid
-graph TD
-    subgraph Presentation Layer
-        UI[Compose UI] --> VM[ViewModel]
-    end
-
-    subgraph Domain Layer
-        VM --> UseCase[Use Cases (Optional)]
-        UseCase --> RepoInterface[Repository Interface]
-        VM --> RepoInterface
-    end
-
-    subgraph Data Layer
-        RepoImpl[Repository Implementation] .-> RepoInterface
-        RepoImpl --> RemoteDS[Remote Data Source (Ktor)]
-        RepoImpl --> Paging[PagingSource]
-    end
-
-    subgraph Network
-        RemoteDS -- JSON --> TMDB[TMDB API]
-    end
-```
 
 ## 📦 Package Structure
 
