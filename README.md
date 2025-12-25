@@ -75,3 +75,11 @@ com.aritradas.movieapp
     TMDB_BEARER_TOKEN=your_token_here
     ```
 4.  Build and run the project.
+
+## Video
+
+
+https://github.com/user-attachments/assets/f068edcb-9683-4a86-a211-60f4a50230bc
+
+
+
